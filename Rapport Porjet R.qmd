@@ -1,0 +1,379 @@
+---
+title: "Rapport Projet R"
+author: "Ghada Belhadj"
+format: 
+  html:
+    self-contained: true
+    
+editor: visual
+---
+
+# Introduction :
+
+## Context of the Project :
+
+in the light of the recent circumstances , the Housing market have been facing turmoil and was one of the most negatively effected economic fields by the world-wide crisis . Which begs the questions of :
+
+1.  what are the causes of the Housing market crisis and when did actually start ?
+
+2.  What are the possible future economic behaviors of this market ?
+
+## Goal of the Project :
+
+In this project we will study ,in detail, the behavior of ***the Housing market In the EU*** in the years between ***2005*** and ***2021*** , while trying to spot trends, determine the potential causes of the crisis and predict the future landscape of the market .
+
+Eventually address commons beliefs such as : is the crisis related to inflation , Covid-19, geopolitical distress , construction prices , etc ..
+
+## Initial hypothesis :
+
+potential hypothetical causes of the crisis :
+
+-   Covid-19
+
+-   inflation
+
+-   construction price
+
+potential future behavior :
+
+-   the market would still face crisis and prices would hit an ultimate high for the past decade .
+
+## Data sources :
+
+In this study 3 datasets ,collected from Kaggle website in the form of csv files, have been used (linked bellow):
+
+-   [Housing_Market_EU_dataset](https://www.kaggle.com/datasets/sndorburian/house-price-index-in-eu-annual-data-2005-2021)
+
+-   [Infaltion_EU_dataset](https://www.kaggle.com/datasets/sndorburian/hicp-inflation-rate-in-the-eu)
+
+-   [Construction_Price_EU](https://www.kaggle.com/datasets/sndorburian/construction-prices-of-houses-annual-data-in-eu?rvi=1)
+
+## Technical environment :
+
+in this study to collect , clean , process , analyse and visualize data the R language and Rstudio IDE was used .
+
+[![Rstudio IDE logo](images/R.png){fig-align="center"}](https://posit.co/download/rstudio-desktop/)
+
+the following **packages** and **libraries** were imported :
+
+-   `readr` for reading structured data from files into R
+
+-   `ggplot2` for creating data visualization
+
+-   `forecast` for time series forecasting and data prediction
+
+-   `stats` for statistical analysis in R
+
+```{r}
+#import libraries 
+library(readr)
+library(ggplot2)
+library(forecast)
+library(stats)
+```
+
+# Data analysis :
+
+## importing data :
+
+```{r}
+#import data from csv file 
+data <- read_csv("Housing_Market_EU_dataset.csv")
+View(data)
+summary(data)
+data_Infla <- read_csv("Inflation_EU_dataset.csv")
+View(data_Infla)
+data_Const <- read_csv("Construction_Price _EU.csv")
+View(data_Const)
+```
+
+in the previous code , the function `read_csv` from the `readr` package was used to import and read data from csv files located on the machine .
+
+## Cleaning and processing data :
+
+```{r}
+#cleaning and processing data 
+clean_data <- na.omit(data)
+clean_data$OBS_VALUE <- as.numeric(clean_data$OBS_VALUE, errors = "coerce")
+data_filtered_const <- data_Const[complete.cases(data_Const$OBS_VALUE), ]
+```
+
+in the previous code , the datasets have been cleaning and processed through the use of :
+
+-   `na.omit` function : deletes the lines with missing values (NA)
+
+-   `as.numeric` function : converts the values of a certain column to numeric values
+
+-   `complete.cases` function : keeps the lines where we have a non Null values in a certain column (in this case it has been used to keep the lines of "data_Const" dataset where it has a non null value in the column OBS_VALUE)
+
+## Analysis and Interpretations :
+
+The analysis in this study consists of 3 parts :
+
+-   the study of behavior of : the Housing market prices (index) in the EU, the inflation in the EU, the construction prices (index )in the EU
+
+-   Spotting for correlation between the Housing market index and inflation and construction prices
+
+-   the prediction of the potential future behavior of the market in the EU
+
+### The behavior of the Housing Market prices in the EU :
+
+```{r}
+#importing libraries and datasets
+
+library(ggplot2)
+library(readr)
+data <- read_csv("Housing_Market_EU_dataset.csv")
+
+#plot1 housing prices % time period  
+ggplot(data, aes(x = TIME_PERIOD, y = OBS_VALUE)) +
+  geom_line() +
+  geom_hline(yintercept = 100, color = "green", linetype = "dashed") +
+  geom_hline(yintercept = 75, color = "green", linetype = "dashed") +
+  geom_vline(xintercept = 2015, color = "red", linetype = "dashed") +
+  labs(
+    title = "House Prices in EU Countries",
+    x = "Time Period",
+    y = "House Price Index"
+  ) +
+  theme_light()
+```
+
+In the previous fig : we have a graph depicting the tendencies and behavior of the European housing market prices through the years : as we have the **Y axis** being the **"House price Index"** and **X axis** being the **"Time Period"** in years between 2005 and 2021 .
+
+\* ***Interpretation :***
+
+-we notice that the House price Index have been stable in the years between 2005 and 2015 as the value of the index was contained withing the range of values of 75 and 100 (the range between both green dashed lines)
+
+-but at 2015 (vertical red line in the graph) we notice that the prices started to sky rocket reaching an ultimate high at the end of 2019 .
+
+\- at 2020 ,the Covid-19 pandemic year, we notice that the prices dipped .
+
+==\> the Housing Market crisis isn't recent or tied to recent event : it has started since 2015
+
+==\> The Covid-19 crisis had nothing to do with the sky-rocketing of the housing prices as we see during that year the prices dipped .
+
+### The behavior of the Construction prices in the EU :
+
+```{r}
+#importing libraries and datasets
+
+library(ggplot2)
+library(readr)
+data_Const <- read_csv("Construction_Price _EU.csv")
+data_filtered_const <- data_Const[complete.cases(data_Const$OBS_VALUE), ]
+
+#plot3 construction price in the EU % time period
+
+ggplot(data_filtered_const, aes(x = TIME_PERIOD, y = OBS_VALUE)) +
+  geom_line() +
+  geom_hline(yintercept = 100, color = "green", linetype = "dashed") +
+  geom_hline(yintercept = 75, color = "green", linetype = "dashed") +
+  geom_vline(xintercept = 2015, color = "red", linetype = "dashed") +
+  labs(
+    title = "Construction price in EU Countries",
+    x = "Time Period",
+    y = "contruction price Index"
+  ) +
+  theme_light()+
+  scale_x_continuous(
+    breaks = seq(min(data_filtered_const$TIME_PERIOD), max(data_filtered_const$TIME_PERIOD), by = 2),  # Espacement de 2 entre les valeurs
+    labels = seq(min(data_filtered_const$TIME_PERIOD), max(data_filtered_const$TIME_PERIOD), by = 2)  # Étiquettes personnalisées
+  )
+
+```
+
+In the previous fig : we have a graph depicting the tendencies and behavior of the European construction prices through the years : as we have the **Y axis** being the **"Construction price Index"** and **X axis** being the **"Time Period"** in years between 2005 and 2022 .
+
+\* ***Interpretation :***
+
+-we notice that the Construction price Index have been stable in the years between 2005 and 2015 as the value of the index was contained withing the range of values of 50 and 100 (the range between both green dashed lines)
+
+-but at 2015 (vertical red line in the graph) we notice that the prices started to sky rocket reaching an ultimate high at the end of 2021 .
+
+==\> the Construction price index mimics the almost same behavior of House Price index as both were stable then started to increase at 2015
+
+==\>possible correlation between the 2 index factors
+
+### The behavior of the Inflation in the EU :
+
+```{r}
+#importing libraries and datasets
+
+library(ggplot2)
+library(readr)
+data_Infla <- read_csv("Inflation_EU_dataset.csv")
+
+#plot2 inflation rate in the EU % time period
+
+ggplot(data_Infla, aes(x = TIME_PERIOD, y = OBS_VALUE)) +
+  geom_line() +
+  geom_vline(xintercept = 2015, color = "red", linetype = "dashed") +
+  labs(
+    title = "Inflation in EU Countries",
+    x = "Time Period",
+    y = "Inflation rate Index"
+  ) +
+  theme_light()+
+  scale_x_continuous(
+    breaks = seq(min(data_Infla$TIME_PERIOD), max(data_Infla$TIME_PERIOD), by = 2),  # Espacement de 2 entre les valeurs
+    labels = seq(min(data_Infla$TIME_PERIOD), max(data_Infla$TIME_PERIOD), by = 2)  # Étiquettes personnalisées
+  )+
+  scale_y_continuous(
+    breaks = seq(min(data_Infla$OBS_VALUE), max(data_Infla$OBS_VALUE), by = 5),  # Espacement de 2 entre les valeurs
+    labels = seq(min(data_Infla$OBS_VALUE), max(data_Infla$OBS_VALUE), by = 5)  # Étiquettes personnalisées
+  )
+```
+
+In the previous fig : we have a graph depicting the tendencies and behavior of the European inflation through the years : as we have the **Y axis** being the **"Inflation rate Index"** and **X axis** being the **"Time Period"** in years between 2005 and 2022 .
+
+\* ***Interpretation :***
+
+-we notice that the inflation rate Index have been stable in the years between 2011 and 2015 as the value of the index was almost linear with little to no variations .
+
+-but at 2015 (vertical red line in the graph) we notice that the rate index started to fluctuate (several ups and dows) reaching an ultimate high at the end of 2021
+
+==\> the Inflation rate index mimics the almost same behavior of House Price index as both were stable then started to increase at 2015
+
+==\>possible correlation between the 2 index factors
+
+### Correlation between the Housing Market prices and the Inflation :
+
+```{r}
+#import libraries 
+library(readr)
+library(ggplot2)
+data <- read_csv("Housing_Market_EU_dataset.csv")
+data_Infla <- read_csv("Inflation_EU_dataset.csv")
+
+#check for correlation between housing prices and inflation : 
+
+  #data and data_infl dont have the same dimension so we r gonna subset from the bigger one 
+
+n_rows_data <- nrow(data)
+n_rows_data_Infla <- nrow(data_Infla)
+print(n_rows_data)
+print(n_rows_data_Infla )
+min_length <- min(n_rows_data, n_rows_data_Infla)
+data_subset <- head(data, n = min_length)
+
+ #calcul correlation 
+
+correlation <- cor(data_subset$OBS_VALUE, data_Infla$OBS_VALUE)
+
+# Plot a scatter plot to visualize the correlation
+plot(data_subset$OBS_VALUE,data_Infla$OBS_VALUE, 
+     main = paste("Correlation =", round(correlation, 2)),
+     xlab = "Housing Prices Index", ylab = "Inflation Index")
+
+# Add a trendline to the scatter plot
+abline(lm(data_subset$OBS_VALUE ~ data_Infla$OBS_VALUE), col = "red",lwd = 3)
+
+```
+
+\* ***Interpretation :***
+
+we have a positive correlation of 0.01 between inflation rate and the housing prices
+
+==\> there is a relationship between the inflation in the EU and the housing market price increase
+
+### Correlation between the Housing Market prices and the construction price :
+
+```{r}
+#import libraries 
+library(readr)
+library(ggplot2)
+data <- read_csv("Housing_Market_EU_dataset.csv")
+data_Const <- read_csv("Construction_Price _EU.csv")
+data_filtered_const <- data_Const[complete.cases(data_Const$OBS_VALUE), ]
+
+#check for correlation between housing prices and construction price index : 
+
+  #data and data_cont dont have the same dimension  so we r gonna subset from the bigger one 
+  # data_cont have Null values in the column OBS_VALUE so we r gonna filter them out 
+
+n_rows_data <- nrow(data) 
+n_rows_data_Const <- nrow(data_filtered_const)
+print(n_rows_data)
+print(n_rows_data_Const )
+min_length <- min(n_rows_data, n_rows_data_Const)
+data_subset <- head(data, n = min_length)
+
+  #the follwing test to check is the column has been succesfullt filtered 
+
+if (anyNA(data_subset$OBS_VALUE) || anyNA(data_filtered_const$OBS_VALUE)) {
+  stop("There are missing values in the data. Please handle them before calculating correlation.")
+}
+
+#calcul correlation 
+
+correlation <- cor(data_subset$OBS_VALUE, data_filtered_const$OBS_VALUE)
+print(correlation)
+
+# Plot a scatter plot to visualize the correlation
+plot(data_subset$OBS_VALUE,data_filtered_const$OBS_VALUE, 
+     main = paste("Correlation =", round(correlation, 2)),
+     xlab = "Housing Prices Index", ylab = "Construction prices Index")
+
+# Add a trendline to the scatter plot
+abline(lm(data_subset$OBS_VALUE ~ data_filtered_const$OBS_VALUE), col = "red",lwd = 3)
+```
+
+\* ***Interpretation :***
+
+we have a negative correlation of -0.05 between construction index and the housing prices
+
+==\> there is a weak relationship between the construction index in the EU and the housing market price increase .
+
+### prediction of the behavior of the Housing market in the following years :
+
+```{r}
+#import libraries 
+library(readr)
+library(ggplot2)
+library(forecast)
+library(stats)
+
+#import data from csv file 
+data <- read_csv("Housing_Market_EU_dataset.csv")
+data_Infla <- read_csv("Inflation_EU_dataset.csv")
+data_Const <- read_csv("Construction_Price _EU.csv")
+data_filtered_const <- data_Const[complete.cases(data_Const$OBS_VALUE), ]
+
+ 
+#prediction of the behavior of the Housing market in the following years (would it stay in crisis or would the prices be regulated)
+
+#create a time series object 
+data_ts <- ts(data$OBS_VALUE, start = 2005, end = 2021, frequency = 1)
+
+# Train an ARIMA model
+arima_model <- auto.arima(data_ts)
+
+# Make predictions using the ARIMA model
+forecast_values <- forecast(arima_model, h = 5)  # Forecasting the next 3 periods
+print(forecast_values)
+
+
+
+# Visualize the original time series data and the forecasted values
+plot(forecast_values, main = "ARIMA Forecast", xlab = "Time", ylab = "Housing Price Index", ylim = c(min(data_ts), max(forecast_values$upper)))
+lines(data_ts, col = "blue")  # Original data
+lines(forecast_values$mean, col = "red")     # Forecasted values
+legend("topright", legend = c("Original", "Forecast"), col = c("blue", "red"), lty = 1)
+```
+
+to predict the future behavior of the housing market , the ARIMA Forecast model has been used , as we had to train the ARIMA model using a time series object created from the **"Housing_Market_EU_dataset"** using the column **OBS_VALUE** and the `auto.arima` function .
+
+\* ***Interpretation :***
+
+according to the ARIMA prediction model , the housing market prices have a logarithmic behavior as it will continue to increase but will settle on an eventual high level . this prediction is for the next 5 years .
+
+# Conclusion :
+
+-   the Housing market crisis in the EU is not a recent issue as it has been going since 2015 and that could be explained by numerous geopolitical causes such as : the wars in the Gulf , Libiya and Aghanistan that caused huge waves of refugees storming Europe which started what s known today as "Europe s refugee crisis" .
+
+-   the housing market crisis is not related to Covid-19 (the issue goes way before that)
+
+-   the behavior of the housing prices is correlated to Inflation and Construction prices
+
+-   According to the ARIMA forecast model , the Housing market is expected to have a logarithmic behavior for the next 5 years .
